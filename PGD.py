@@ -2,6 +2,7 @@ import argparse
 from data import generateData
 from itertools import product
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 
@@ -16,11 +17,12 @@ parser.add_argument('--count', type=int, default = 100000,
                     help='Number of training Samples')
 parser.add_argument('--scale', type=int, default=10,
                     help='Scale')
-parser.add_argument('--lr', type = np.float32, default=0.001)
+parser.add_argument('--lr', type = np.float32, default=0.1)
+parser.add_argument('--seed', type = int, default=42)
 
 args = parser.parse_args()
 
-X, y = generateData(args.n, args.d, args.scale)
+X, X_test, y, y_test = generateData(args.n, args.d, args.scale, args.seed)
 
 # Full precision weights
 reg = LinearRegression(fit_intercept=False).fit(X,y)
@@ -46,6 +48,7 @@ for weights in weight_combinations:
 
 lossBinary = mean_squared_error(np.dot(X, best_weights.T),y)
 print("Binary Loss is "+str(lossBinary))
+print(best_weights)
 # Algorithm Weights
 def grad_(X,y,beta):
     y_hat = np.dot(X, beta.T)
@@ -59,12 +62,30 @@ def proj(beta):
 
 beta = np.random.rand(1,args.d)
 count = 0
+yy = []
+xx = []
+prev_beta = beta
 while (not np.array_equal(best_weights, beta)) and count != args.count:
     count = count+1
     grad = grad_(X,y,beta).T
+    if np.linalg.norm(grad) == 0:
+        break
     beta = beta - args.lr*grad
     beta = proj(beta)
+    if np.array_equal(prev_beta, beta):
+        print("Converged")
+        break
+    prev_beta = beta
+    yy.append(mean_squared_error(np.dot(X,beta.T),y))
+    xx.append(count)
 
 print("Iterations to converge "+str(count))
 lossPGD = mean_squared_error(np.dot(X,beta.T),y)
-print(lossPGD)
+plt.plot(xx,yy)
+plt.xlabel('Iterations')
+plt.ylabel('Loss')
+plt.savefig('Results/PGD'+str(args.seed)+'.png')
+plt.show()
+print("Training Loss "+str(lossPGD))
+print("Test Loss "+str(mean_squared_error(np.dot(X_test,beta.T),y_test)))
+print(beta)

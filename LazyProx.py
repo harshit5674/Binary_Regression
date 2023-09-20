@@ -20,7 +20,7 @@ parser.add_argument('--scale', type=int, default=10,
                     help='Scale')
 parser.add_argument('--lr', type = np.float32, default=0.01)
 parser.add_argument('--reg', type = int, default=1)
-parser.add_argument('--lambda_', type = np.float32, default=0.001)
+parser.add_argument('--lambda_', type = np.float32, default=0.01)
 parser.add_argument('--seed', type = int, default=42)
 
 args = parser.parse_args()
@@ -57,6 +57,9 @@ print("Binary Loss is "+str(lossBinary))
 print(best_weights)
 # Algorithm Weights
 
+def quantize(x):
+    return np.sign(x)
+
 def Relu(x):
     return x * (x > 0)
 
@@ -85,19 +88,26 @@ prev_beta = beta
 count = 0
 xx = []
 yy = []
-while (not np.array_equal(best_weights, beta)) and count != args.count:
+best_error = float('inf')
+new_best_weights = beta
+while (not np.array_equal(new_best_weights, quantize(beta))) and count != args.count:
     count = count+1
-    grad = grad_(X,y,beta).T
+    grad = grad_(X,y,proj(beta,getLambda_(count+1))).T
     if np.linalg.norm(grad) == 0:
         break
     beta = beta - args.lr*grad
-    beta = proj(beta, getLambda_(count+1))
     if np.array_equal(prev_beta, beta):
         break
     prev_beta = beta
-    yy.append(mean_squared_error(np.dot(X,beta.T),y))
+    mse1 = mean_squared_error(np.dot(X,beta.T),y)
+    mse2 = mean_squared_error(np.dot(X,quantize(beta.T)),y)
+    yy.append(mse1)
     xx.append(count)
+    best_error = min(mse2, best_error)
+    if best_error == mse2:
+        new_best_weights = quantize(beta)
 
+beta = new_best_weights
 print("Iterations to converge "+str(count))
 lossPGD = mean_squared_error(np.dot(X,beta.T),y)
 plt.plot(xx,yy)
@@ -109,8 +119,8 @@ from datetime import datetime
 now = datetime.now()
 current_time = now.strftime("%H:%M:%S")
 
-plt.savefig('Results/Prox/'+str(args.seed)+'.png')
+plt.savefig('Results/LazyProx/'+str(args.seed)+'.png')
 plt.show()
-print("Training Loss "+str(lossPGD))
+print("Training Loss "+str(best_error))
 print("Test Loss "+str(mean_squared_error(np.dot(X_test,beta.T),y_test)))
-print(beta)
+print(new_best_weights)
