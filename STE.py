@@ -60,7 +60,7 @@ def grad_(X,y,beta):
 def proj(beta):
     return np.sign(beta)
 
-beta = np.random.rand(1,args.d)
+beta = np.zeros((1,args.d))
 count = 0
 yy = []
 xx = []
@@ -68,6 +68,7 @@ prev_beta = beta
 best_error = float('inf')
 new_best_weights = beta
 while (not np.array_equal(best_weights, proj(beta))) and count != args.count:
+#while count != args.count:
     count = count+1
     grad = grad_(X,y,proj(beta)).T
     if np.linalg.norm(grad) == 0:

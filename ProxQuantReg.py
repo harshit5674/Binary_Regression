@@ -80,7 +80,8 @@ def proj(beta, lambda_):
     else:
         return (beta + lambda_*np.sign(beta))/(1+lambda_)
 
-beta = np.random.rand(1,args.d)
+beta = np.zeros((1,args.d))
+#beta = np.random.rand(1,args.d)
 prev_beta = beta
 count = 0
 xx = []
