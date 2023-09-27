@@ -79,6 +79,9 @@ def proj(beta, lambda_):
         )
     else:
         return (beta + lambda_*np.sign(beta))/(1+lambda_)
+    
+def quantize(x):
+    return np.sign(x)
 
 beta = np.zeros((1,args.d))
 #beta = np.random.rand(1,args.d)
@@ -86,6 +89,8 @@ prev_beta = beta
 count = 0
 xx = []
 yy = []
+new_best_weights = beta
+best_error = float('inf')
 while (not np.array_equal(best_weights, beta)) and count != args.count:
     count = count+1
     grad = grad_(X,y,beta).T
@@ -98,8 +103,13 @@ while (not np.array_equal(best_weights, beta)) and count != args.count:
     prev_beta = beta
     yy.append(mean_squared_error(np.dot(X,beta.T),y))
     xx.append(count)
+    mse2 = mean_squared_error(np.dot(X,quantize(beta.T)),y)
+    best_error = min(mse2, best_error)
+    if best_error == mse2:
+        new_best_weights = quantize(beta)
 
 print("Iterations to converge "+str(count))
+beta = new_best_weights
 lossPGD = mean_squared_error(np.dot(X,beta.T),y)
 plt.plot(xx,yy)
 plt.xlabel('Iterations')

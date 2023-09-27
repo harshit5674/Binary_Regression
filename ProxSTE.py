@@ -84,18 +84,18 @@ xx = []
 prev_beta = beta
 best_error = float('inf')
 new_best_weights = beta
-while (not np.array_equal(best_weights, proj(beta))) and count != args.count:
-#while count != args.count:
+#while (not np.array_equal(best_weights, proj(beta))) and count != args.count:
+while count != args.count:
     count = count+1
     grad = grad_(X,y,proj(beta)).T
     if np.linalg.norm(grad) == 0:
         break
     beta = beta - args.lr*grad
+    beta = proj_prox(beta, getLambda_(count+1))
     if np.array_equal(prev_beta, beta):
         print("Converged")
         break
     prev_beta = beta
-    beta = proj_prox(beta, getLambda_(count+1))
     mse1 = mean_squared_error(np.dot(X,beta.T),y)
     mse2 = mean_squared_error(np.dot(X,proj(beta.T)),y)
     yy.append(mse1)
@@ -105,12 +105,12 @@ while (not np.array_equal(best_weights, proj(beta))) and count != args.count:
         new_best_weights = proj(beta)
 
 print("Iterations to converge "+str(count))
-beta = new_best_weights
+#beta = new_best_weights
 plt.plot(xx,yy)
 plt.xlabel('Iterations')
 plt.ylabel('Loss')
 plt.savefig('Results/ProxSTE/'+str(args.seed)+'.png')
 plt.show()
-print("Training Loss "+str(best_error))
+print("Training Loss "+str(mean_squared_error(np.dot(X,beta.T),y)))
 print("Test Loss "+str(mean_squared_error(np.dot(X_test,beta.T),y_test)))
 print(new_best_weights)

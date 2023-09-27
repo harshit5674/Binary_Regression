@@ -67,8 +67,8 @@ xx = []
 prev_beta = beta
 best_error = float('inf')
 new_best_weights = beta
-while (not np.array_equal(best_weights, proj(beta))) and count != args.count:
-#while count != args.count:
+#while (not np.array_equal(best_weights, proj(beta))) and count != args.count:
+while count != args.count:
     count = count+1
     grad = grad_(X,y,proj(beta)).T
     if np.linalg.norm(grad) == 0:
