@@ -23,6 +23,17 @@ parser.add_argument('--seed', type = int, default=42)
 args = parser.parse_args()
 
 X, X_test, y, y_test = generateData(args.n, args.d, args.scale, args.seed)
+"""X = np.zeros((2,1))
+X[0]=2
+X[1]=-2
+X_test = np.zeros((1,1))
+y = np.zeros((2,1))
+y_test = np.zeros((1,1))
+y[0] = 4
+y[1]=4
+y_test[0]=0
+print(X)
+print(y)"""
 
 # Full precision weights
 reg = LinearRegression(fit_intercept=False).fit(X,y)
@@ -53,22 +64,21 @@ print(best_weights)
 def grad_(X,y,beta):
     y_hat = np.dot(X, beta.T)
     error = y - y_hat
-    mse = np.square(error).mean()
     grad = - (1 / args.n) * np.dot(X.T, error)
     return grad
 
 def proj(beta):
     return np.sign(beta)
 
-beta = np.zeros((1,args.d))
+beta = np.random.rand(1,args.d)
 count = 0
 yy = []
 xx = []
 prev_beta = beta
 best_error = float('inf')
 new_best_weights = beta
-#while (not np.array_equal(best_weights, proj(beta))) and count != args.count:
-while count != args.count:
+while (not np.array_equal(best_weights, proj(beta))) and count != args.count:
+#while count != args.count:
     count = count+1
     grad = grad_(X,y,proj(beta)).T
     if np.linalg.norm(grad) == 0:
@@ -80,9 +90,10 @@ while count != args.count:
     prev_beta = beta
     mse1 = mean_squared_error(np.dot(X,beta.T),y)
     mse2 = mean_squared_error(np.dot(X,proj(beta.T)),y)
-    yy.append(mse1)
+    yy.append(np.linalg.norm(beta - best_weights))
     xx.append(count)
     best_error = min(mse2, best_error)
+    #print(beta)
     if best_error == mse2:
         new_best_weights = proj(beta)
 
@@ -90,7 +101,7 @@ print("Iterations to converge "+str(count))
 beta = new_best_weights
 plt.plot(xx,yy)
 plt.xlabel('Iterations')
-plt.ylabel('Loss')
+plt.ylabel('L2')
 plt.savefig('Results/STE/'+str(args.seed)+'.png')
 plt.show()
 print("Training Loss "+str(best_error))

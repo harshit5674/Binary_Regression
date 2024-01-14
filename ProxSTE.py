@@ -55,7 +55,6 @@ print(best_weights)
 def grad_(X,y,beta):
     y_hat = np.dot(X, beta.T)
     error = y - y_hat
-    mse = np.square(error).mean()
     grad = - (1 / args.n) * np.dot(X.T, error)
     return grad
 
@@ -98,19 +97,21 @@ while count != args.count:
     prev_beta = beta
     mse1 = mean_squared_error(np.dot(X,beta.T),y)
     mse2 = mean_squared_error(np.dot(X,proj(beta.T)),y)
-    yy.append(mse1)
+    yy.append(np.linalg.norm(beta - best_weights))
     xx.append(count)
     best_error = min(mse2, best_error)
     if best_error == mse2:
         new_best_weights = proj(beta)
+    print(beta)
 
 print("Iterations to converge "+str(count))
 #beta = new_best_weights
 plt.plot(xx,yy)
 plt.xlabel('Iterations')
-plt.ylabel('Loss')
+plt.ylabel('L2')
 plt.savefig('Results/ProxSTE/'+str(args.seed)+'.png')
 plt.show()
 print("Training Loss "+str(mean_squared_error(np.dot(X,beta.T),y)))
+print("Distance is "+str(np.linalg.norm(beta - best_weights)))
 print("Test Loss "+str(mean_squared_error(np.dot(X_test,beta.T),y_test)))
 print(new_best_weights)
